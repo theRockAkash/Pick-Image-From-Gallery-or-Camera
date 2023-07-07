@@ -1,6 +1,36 @@
-# Pick-Image-From-Gallery-or-Camera
+# Pick-Image-From-Gallery-or-Camera Kotlin Android
 
+#Manifest File
+```
+ <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+    <queries>
+        <intent>
+            <action android:name="android.media.action.IMAGE_CAPTURE" />
+        </intent>
+    </queries>
+    <uses-permission android:name="android.permission.CAMERA" />
 
+```
+#Add Service to Manifest for Backward compatibility for New Photo Picker
+
+```
+ <service
+            android:name="com.google.android.gms.metadata.ModuleDependencies"
+            android:enabled="false"
+            android:exported="false"
+            tools:ignore="MissingClass">
+            <intent-filter>
+                <action android:name="com.google.android.gms.metadata.MODULE_DEPENDENCIES" />
+            </intent-filter>
+
+            <meta-data
+                android:name="photopicker_activity:0:required"
+                android:value="" />
+        </service>
+
+```
 
 #MainActivity.kt onCreate()
 ```
