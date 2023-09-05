@@ -125,7 +125,9 @@ private fun showDialog() {
            contentUri?.let { uri ->
                 this.contentResolver?.openInputStream(uri).use { inputStream ->
                     inputStream?.readBytes()?.let {
-                          uploadSignPic(it)
+                          if(it.isNotEmpty()) {
+                           uploadSignPic(it)
+                          }
                     }
                 }
             }
