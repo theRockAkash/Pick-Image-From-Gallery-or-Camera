@@ -11,7 +11,20 @@
         </intent>
     </queries>
     <uses-permission android:name="android.permission.CAMERA" />
-
+ <application
+     ...
+        >
+ <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.example.app.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths"
+                tools:replace="android:resource" />
+        </provider>
+</application>
 ```
 #Add Service to Manifest for Backward compatibility for New Photo Picker
 
@@ -84,21 +97,36 @@ private fun showDialog() {
         }
     }
 
+  private var contentUri: Uri? = null
  private fun showCameraIntent() {
-        val takePicture = Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        getContent.launch(takePicture)
+
+        // getContent.launch(Intent(MediaStore.ACTION_IMAGE_CAPTURE))
+        val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        var photoFile: File? = null
+        try {
+            photoFile = createImageFile()
+        } catch (ex: IOException) {
+            println(ex)
+        }
+        contentUri = photoFile?.toUri()
+        Log.w("TAG", "showCameraIntent: $contentUri")
+        if (photoFile != null && photoFile.exists()) {
+            val photoURI = FileProvider.getUriForFile(
+                this,
+                "com.example.app.fileprovider",
+                photoFile
+            )
+            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
+            getContent.launch(takePictureIntent)
+        }
     }
     private val getContent =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { uri: ActivityResult? ->
-            uri?.data?.extras?.let {
-                try {
-                    val bitmap = it["data"] as Bitmap?
-                    val stream = ByteArrayOutputStream()
-                    bitmap?.compress(Bitmap.CompressFormat.JPEG, 100, stream)
-                    val bytes = stream.toByteArray()
-                    uploadProfilePic(bytes)
-                } catch (e: Exception) {
-                    e.printStackTrace()
+           contentUri?.let { uri ->
+                this.contentResolver?.openInputStream(uri).use { inputStream ->
+                    inputStream?.readBytes()?.let {
+                          uploadSignPic(it)
+                    }
                 }
             }
         }
